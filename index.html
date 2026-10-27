@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cajero Automático NextGen</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Iconos Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="atm-wrapper">
+        <div class="glow-bg"></div>
+        
+        <!-- Tarjeta Principal del Cajero -->
+        <main class="atm-card">
+            
+            <!-- Encabezado con estado -->
+            <header class="atm-header">
+                <div class="brand">
+                    <div class="brand-logo"><i class="ph-bold ph-bank"></i></div>
+                    <div class="brand-info">
+                        <h2>NEXO BANK</h2>
+                        <span>Cajero Inteligente v2.5</span>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <span class="dot"></span> En línea
+                </div>
+            </header>
+
+            <!-- PANTALLA 1: Selección de Cuenta -->
+            <section id="pantalla-cuentas" class="pantalla active">
+                <div class="step-badge"><i class="ph-bold ph-user-circle"></i> Paso 1 de 3</div>
+                <h1 class="title">Selecciona tu Cuenta</h1>
+                <p class="subtitle">Elige una cuenta registrada para iniciar la sesión</p>
+                
+                <div id="lista-cuentas" class="accounts-grid">
+                    <!-- Generado dinámicamente desde JS -->
+                </div>
+            </section>
+
+            <!-- PANTALLA 2: Ingreso de Contraseña (PIN) -->
+            <section id="pantalla-login" class="pantalla">
+                <div class="step-badge"><i class="ph-bold ph-shield-check"></i> Paso 2 de 3</div>
+                <div class="user-chip">
+                    <i class="ph-bold ph-user"></i>
+                    <span id="login-nombre-usuario">Usuario</span>
+                </div>
+                <h1 class="title">Ingresa tu PIN</h1>
+                <p class="subtitle">Introduce tu clave de seguridad de 4 dígitos</p>
+
+                <form id="form-login" onsubmit="return false;">
+                    <div class="pin-display-container">
+                        <div class="pin-dots">
+                            <span class="dot-pin"></span>
+                            <span class="dot-pin"></span>
+                            <span class="dot-pin"></span>
+                            <span class="dot-pin"></span>
+                        </div>
+                        <input type="password" id="input-password" maxlength="4" placeholder="****" readonly>
+                    </div>
+                    <p id="error-login" class="error-msg"></p>
+
+                    <!-- Keypad Numérico Virtual -->
+                    <div class="pin-keypad">
+                        <button type="button" class="key" onclick="pressKey('1')">1</button>
+                        <button type="button" class="key" onclick="pressKey('2')">2</button>
+                        <button type="button" class="key" onclick="pressKey('3')">3</button>
+                        <button type="button" class="key" onclick="pressKey('4')">4</button>
+                        <button type="button" class="key" onclick="pressKey('5')">5</button>
+                        <button type="button" class="key" onclick="pressKey('6')">6</button>
+                        <button type="button" class="key" onclick="pressKey('7')">7</button>
+                        <button type="button" class="key" onclick="pressKey('8')">8</button>
+                        <button type="button" class="key" onclick="pressKey('9')">9</button>
+                        <button type="button" class="key key-action key-clear" onclick="clearKeypad()"><i class="ph-bold ph-backspace"></i></button>
+                        <button type="button" class="key" onclick="pressKey('0')">0</button>
+                        <button type="button" class="key key-action key-submit" onclick="validarPIN()"><i class="ph-bold ph-check"></i></button>
+                    </div>
+                </form>
+
+                <button class="btn btn-ghost" onclick="volverASeleccion()">
+                    <i class="ph-bold ph-arrow-left"></i> Cambiar de cuenta
+                </button>
+            </section>
+
+            <!-- PANTALLA 3: Menú Principal -->
+            <section id="pantalla-menu" class="pantalla">
+                <div class="user-chip accent">
+                    <i class="ph-bold ph-sparkle"></i>
+                    <span id="bienvenida-menu">Bienvenido</span>
+                </div>
+                <h1 class="title">¿Qué deseas hacer hoy?</h1>
+                <p class="subtitle">Selecciona una de las operaciones disponibles</p>
+
+                <div class="menu-grid">
+                    <button class="menu-card card-blue" onclick="mostrarOpcion('saldo')">
+                        <div class="icon-wrap"><i class="ph-bold ph-wallet"></i></div>
+                        <div class="card-info">
+                            <h3>Consultar Saldo</h3>
+                            <span>Revisa tu saldo actual</span>
+                        </div>
+                        <i class="ph-bold ph-caret-right arrow"></i>
+                    </button>
+
+                    <button class="menu-card card-green" onclick="mostrarOpcion('ingresar')">
+                        <div class="icon-wrap"><i class="ph-bold ph-arrow-down-left"></i></div>
+                        <div class="card-info">
+                            <h3>Ingresar Monto</h3>
+                            <span>Realiza un depósito a tu cuenta</span>
+                        </div>
+                        <i class="ph-bold ph-caret-right arrow"></i>
+                    </button>
+
+                    <button class="menu-card card-orange" onclick="mostrarOpcion('retirar')">
+                        <div class="icon-wrap"><i class="ph-bold ph-arrow-up-right"></i></div>
+                        <div class="card-info">
+                            <h3>Retirar Monto</h3>
+                            <span>Retira efectivo de tu saldo</span>
+                        </div>
+                        <i class="ph-bold ph-caret-right arrow"></i>
+                    </button>
+                </div>
+
+                <button class="btn btn-danger-soft" onclick="cerrarSesion()">
+                    <i class="ph-bold ph-sign-out"></i> Salir / Cambiar de cuenta
+                </button>
+            </section>
+
+            <!-- PANTALLA 4: Operaciones -->
+            <section id="pantalla-operacion" class="pantalla">
+                <h1 class="title" id="titulo-operacion">Operación</h1>
+
+                <!-- Tarjeta: Consultar Saldo -->
+                <div id="vista-saldo" class="operation-card box-blue">
+                    <div class="card-head">
+                        <i class="ph-bold ph-coins"></i>
+                        <span>Saldo Total Disponible</span>
+                    </div>
+                    <div class="balance-amount" id="monto-saldo">S/ 0.00</div>
+                    <div class="card-footer-info">
+                        <i class="ph-bold ph-shield-check"></i> Consulta protegida por encriptación
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Ingresar Monto -->
+                <div id="vista-ingresar" class="operation-card box-green">
+                    <div class="card-head">
+                        <i class="ph-bold ph-arrow-circle-down"></i>
+                        <span>Depósito en Efectivo</span>
+                    </div>
+                    <div class="input-field-group">
+                        <label for="input-ingreso">Monto a depositar (S/)</label>
+                        <div class="currency-input">
+                            <span>S/</span>
+                            <input type="number" id="input-ingreso" min="1" placeholder="0.00" step="any">
+                        </div>
+                    </div>
+                    <div class="quick-amounts">
+                        <button type="button" class="chip-amount" onclick="setMontoIngreso(20)">+S/20</button>
+                        <button type="button" class="chip-amount" onclick="setMontoIngreso(50)">+S/50</button>
+                        <button type="button" class="chip-amount" onclick="setMontoIngreso(100)">+S/100</button>
+                        <button type="button" class="chip-amount" onclick="setMontoIngreso(200)">+S/200</button>
+                    </div>
+                    <button class="btn btn-success" onclick="procesarIngreso()">
+                        <i class="ph-bold ph-check-circle"></i> Confirmar Depósito
+                    </button>
+                </div>
+
+                <!-- Tarjeta: Retirar Monto -->
+                <div id="vista-retirar" class="operation-card box-orange">
+                    <div class="card-head">
+                        <i class="ph-bold ph-arrow-circle-up"></i>
+                        <span>Retiro de Efectivo</span>
+                    </div>
+                    <div class="input-field-group">
+                        <label for="input-retiro">Monto a retirar (S/)</label>
+                        <div class="currency-input">
+                            <span>S/</span>
+                            <input type="number" id="input-retiro" min="1" placeholder="0.00" step="any">
+                        </div>
+                    </div>
+                    <div class="quick-amounts">
+                        <button type="button" class="chip-amount" onclick="setMontoRetiro(20)">S/20</button>
+                        <button type="button" class="chip-amount" onclick="setMontoRetiro(50)">S/50</button>
+                        <button type="button" class="chip-amount" onclick="setMontoRetiro(100)">S/100</button>
+                        <button type="button" class="chip-amount" onclick="setMontoRetiro(200)">S/200</button>
+                    </div>
+                    <button class="btn btn-warning" onclick="procesarRetiro()">
+                        <i class="ph-bold ph-money"></i> Confirmar Retiro
+                    </button>
+                </div>
+
+                <!-- Recibo / Voucher de Resultado -->
+                <div id="receipt-container" class="receipt-card hidden">
+                    <div class="receipt-header">
+                        <i id="receipt-icon" class="ph-bold ph-check-circle"></i>
+                        <h4 id="receipt-status">Operación Exitosa</h4>
+                    </div>
+                    <div class="receipt-body">
+                        <div class="receipt-row">
+                            <span>Tipo de operación:</span>
+                            <strong id="receipt-type">-</strong>
+                        </div>
+                        <div class="receipt-row">
+                            <span>Monto procesado:</span>
+                            <strong id="receipt-amount">S/ 0.00</strong>
+                        </div>
+                        <div class="receipt-divider"></div>
+                        <div class="receipt-row highlight">
+                            <span>Nuevo Saldo:</span>
+                            <strong id="receipt-new-balance">S/ 0.00</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="mensaje-operacion" class="error-msg-op"></p>
+
+                <button class="btn btn-ghost" onclick="volverAlMenu()">
+                    <i class="ph-bold ph-arrow-left"></i> Volver al Menú
+                </button>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
